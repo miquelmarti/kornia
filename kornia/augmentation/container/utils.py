@@ -250,7 +250,7 @@ class MaskApplyInverse(ApplyInverseImpl):
 
             if 'resample' in module.flags:
                 _param['resample'] = Resample.NEAREST
-                _param['align_corners'] = None
+                _param['align_corners'] = False
 
             input = module(input, params=_param)
         elif isinstance(module, kornia.augmentation.ImageSequential) and not module.is_intensity_only():
@@ -279,8 +279,8 @@ class MaskApplyInverse(ApplyInverseImpl):
             param.data['resample'] = Resample.NEAREST
             extra_args['resample'] = Resample.NEAREST.name.lower()
         if 'align_corners' in module.flags:
-            param.data['align_corners'] = None
-            extra_args['align_corners'] = None
+            param.data['align_corners'] = False
+            extra_args['align_corners'] = False
 
         if isinstance(module, GeometricAugmentationBase2D):
             input = module.inverse(input, params=None if param is None else cast(Dict, param.data), **extra_args)
