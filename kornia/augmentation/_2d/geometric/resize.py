@@ -57,6 +57,8 @@ class Resize(GeometricAugmentationBase2D):
         align_corners = self.flags["align_corners"]
         if "align_corners" in params:
             align_corners = params["align_corners"]
+        if interpolation in ("nearest", "area", "nearest-exact"):
+            align_corners = None
 
         for i in range(B):
             x1 = int(params["src"][i, 0, 0])
