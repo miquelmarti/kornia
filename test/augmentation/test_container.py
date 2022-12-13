@@ -467,6 +467,7 @@ class TestAugmentationSequential:
     def test_individual_forward_and_inverse(self, device, dtype):
         inp = torch.randn(1, 3, 1000, 500, device=device, dtype=dtype)
         bbox = torch.tensor([[[355, 10], [660, 10], [660, 250], [355, 250]]], device=device, dtype=dtype)
+        bbox_list = [torch.tensor([[[355, 10], [660, 10], [660, 250], [355, 250]]], device=device, dtype=dtype)]
         keypoints = torch.tensor([[[465, 115], [545, 116]]], device=device, dtype=dtype)
         mask = bbox_to_mask(
             torch.tensor([[[155, 0], [900, 0], [900, 400], [155, 400]]], device=device, dtype=dtype), 500, 1000
@@ -478,23 +479,27 @@ class TestAugmentationSequential:
             K.AugmentationSequential(K.ColorJiggle(0.1, 0.1, 0.1, 0.1, p=1.0), K.RandomAffine(360, p=1.0)),
             K.RandomAffine(360, p=1.0),
             K.RandomCrop(crop_size, padding=1, cropping_mode='resample', fill=0),
-            data_keys=['input', 'mask', 'bbox', 'keypoints'],
+            data_keys=['input', 'mask', 'bbox', 'bbox', 'keypoints'],
             extra_args={},
         )
         # NOTE: Mask data with nearest not passing reproducibility check under float64.
-        reproducibility_test((inp, mask, bbox, keypoints), aug)
+        reproducibility_test((inp, mask, bbox, bbox_list, keypoints), aug)
 
-        out = aug(inp, mask, bbox, keypoints)
+        out = aug(inp, mask, bbox, bbox_list, keypoints)
         assert out[0].shape == (*inp.shape[:2], *crop_size)
         assert out[1].shape == (*mask.shape[:2], *crop_size)
         assert out[2].shape == bbox.shape
-        assert out[3].shape == keypoints.shape
+        assert len(out[3]) == len(bbox_list)
+        assert out[3][0].shape == bbox_list[0].shape
+        assert out[4].shape == keypoints.shape
 
         out_inv = aug.inverse(*out)
         assert out_inv[0].shape == inp.shape
         assert out_inv[1].shape == mask.shape
         assert out_inv[2].shape == bbox.shape
-        assert out_inv[3].shape == keypoints.shape
+        assert len(out_inv[3]) == len(bbox_list)
+        assert out_inv[3][0].shape == bbox_list[0].shape
+        assert out_inv[4].shape == keypoints.shape
 
         aug = K.AugmentationSequential(K.RandomAffine(360, p=1.0))
         assert aug(inp, data_keys=['input']).shape == inp.shape
@@ -504,6 +509,7 @@ class TestAugmentationSequential:
 
         assert aug.inverse(inp, data_keys=['input']).shape == inp.shape
         assert aug.inverse(bbox, data_keys=['bbox']).shape == bbox.shape
+        assert aug.inverse(bbox_list, data_keys=['bbox'])[0].shape == bbox_list[0].shape
         assert aug.inverse(keypoints, data_keys=['keypoints']).shape == keypoints.shape
         assert aug.inverse(mask, data_keys=['mask']).shape == mask.shape
 

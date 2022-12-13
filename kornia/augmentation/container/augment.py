@@ -276,10 +276,7 @@ class AugmentationSequential(ImageSequential):
             else:
                 outputs[idx] = input
 
-        _outputs = [i for i in outputs if isinstance(i, Tensor)]
-
-        if len(_outputs) == 1 and isinstance(_outputs, list):
-            return _outputs[0]
+        _outputs = [i for i in outputs if i is not None]
 
         return _outputs
 
@@ -425,5 +422,5 @@ class AugmentationSequential(ImageSequential):
                 outputs[idx] = arg.to_tensor()
             else:
                 outputs[idx] = input
-        _outputs = [i for i in outputs if isinstance(i, Tensor)]
+        _outputs = [i for i in outputs if i is not None]
         return self.__packup_output__(_outputs, label)
