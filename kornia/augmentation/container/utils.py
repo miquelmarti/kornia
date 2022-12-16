@@ -338,10 +338,7 @@ class BBoxApplyInverse(ApplyInverseImpl):
         if isinstance(module, RandomCrop) and param is not None and isinstance(param.data, dict):
             return param.data["padding_size"]
         elif param is not None and isinstance(param.data, list):
-            padding_size = None
-            for param_ in param.data:
-                padding_size = param_.data.get('padding_size', None)
-            return padding_size
+            return next((p_.data['padding_size'] for p_ in param.data if 'padding_size' in p_.data), None)
         return None
 
     @classmethod
