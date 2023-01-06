@@ -609,7 +609,7 @@ class ApplyInverse:
             return InputApplyInverse
         if DataKey.get(dcate) == DataKey.MASK:
             return MaskApplyInverse
-        if DataKey.get(dcate) in [DataKey.BBOX, DataKey.BBOX_XYXY, DataKey.BBOX_XYWH]:
+        if DataKey.get(dcate) in [DataKey.BBOX, DataKey.BBOX_XYXY, DataKey.BBOX_XYWH, DataKey.BBOXES]:
             # We are converting to (B, 4, 2) internally for all formats.
             return BBoxApplyInverse
         if DataKey.get(dcate) in [DataKey.KEYPOINTS]:
@@ -634,7 +634,7 @@ class ApplyInverse:
             module: any torch Module but only kornia augmentation modules will count
                 to apply transformations.
             param: the corresponding parameters to the module.
-            dcate: data category. 'input', 'mask', 'bbox', 'bbox_xyxy', 'bbox_xyhw', 'keypoints'.
+            dcate: data category. 'input', 'mask', 'bbox', 'bbox_xyxy', 'bbox_xyhw', 'boxes', 'keypoints'.
                 By default, it is set to 'input'.
         """
         func: Type[ApplyInverseInterface] = cls._get_func_by_key(dcate)
@@ -660,7 +660,7 @@ class ApplyInverse:
             module: any torch Module but only kornia augmentation modules will count
                 to apply transformations.
             param: the corresponding parameters to the module.
-            dcate: data category. 'input', 'mask', 'bbox', 'bbox_xyxy', 'bbox_xyhw', 'keypoints'.
+            dcate: data category. 'input', 'mask', 'bbox', 'bbox_xyxy', 'bbox_xyhw', 'boxes', 'keypoints'.
                 By default, it is set to 'input'.
         """
         func: Type[ApplyInverseInterface] = cls._get_func_by_key(dcate)

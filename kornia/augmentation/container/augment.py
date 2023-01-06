@@ -317,16 +317,23 @@ class AugmentationSequential(ImageSequential):
         for arg, dcate in zip(args, data_keys):
             if DataKey.get(dcate) in [DataKey.INPUT, DataKey.MASK, DataKey.KEYPOINTS]:
                 inp.append(arg)
-            elif DataKey.get(dcate) in [DataKey.BBOX, DataKey.BBOX_XYXY, DataKey.BBOX_XYWH]:
+            elif DataKey.get(dcate) in [DataKey.BBOX, DataKey.BBOX_XYXY, DataKey.BBOX_XYWH, DataKey.BBOXES]:
                 if DataKey.get(dcate) in [DataKey.BBOX]:
                     mode = "vertices_plus"
                 elif DataKey.get(dcate) in [DataKey.BBOX_XYXY]:
                     mode = "xyxy"
                 elif DataKey.get(dcate) in [DataKey.BBOX_XYWH]:
                     mode = "xywh"
+                elif DataKey.get(dcate) in [DataKey.BBOXES]:
+                    # mode = "xyxy_plus"  TODO: Not required, mode defined inside Boxes class already
+                    pass
                 else:
                     raise ValueError(f"Unsupported mode `{DataKey.get(dcate).name}`.")
-                inp.append(Boxes.from_tensor(arg, mode=mode))
+                if isinstance(arg, (Boxes,)):
+                    assert DataKey.get(dcate) in [DataKey.BBOXES]  # TODO: Not required, remove this
+                    inp.append(arg)
+                else:
+                    inp.append(Boxes.from_tensor(arg, mode=mode))
             else:
                 raise NotImplementedError(f"input type of {dcate} is not implemented.")
         return inp
@@ -423,7 +430,7 @@ class AugmentationSequential(ImageSequential):
                 ):
                     input, label = ApplyInverse.apply_by_key(input, label, module, param, dcate, extra_args=extra_args)
                 elif isinstance(module, MixAugmentationBaseV2):
-                    if dcate in [DataKey.BBOX_XYXY, DataKey.BBOX_XYWH]:
+                    if dcate in [DataKey.BBOX_XYXY, DataKey.BBOX_XYWH]:  # TODO: Add DataKey.BBOXES?
                         dcate = DataKey.BBOX
                     input = module(input, params=param.data, data_keys=[dcate])
                 elif isinstance(module, (SequentialBase,)):
@@ -433,9 +440,13 @@ class AugmentationSequential(ImageSequential):
 
             if isinstance(arg, (Boxes,)):
                 arg._data = input
-                outputs[idx] = arg.to_tensor()
+                if dcate == DataKey.BBOXES:
+                    outputs[idx] = arg
+                else:
+                    outputs[idx] = arg.to_tensor()
+
             else:
                 outputs[idx] = input
-        _outputs = [i for i in outputs if isinstance(i, Tensor) or KORNIA_CHECK_IS_LIST_OF_TENSOR(i)]
+        _outputs = [i for i in outputs if isinstance(i, Tensor) or KORNIA_CHECK_IS_LIST_OF_TENSOR(i) or isinstance(i, Boxes)]
 
         return self.__packup_output__(_outputs, label)

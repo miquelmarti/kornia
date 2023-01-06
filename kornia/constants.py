@@ -130,6 +130,7 @@ class DataKey(Enum, metaclass=_KORNIA_EnumMeta):
     BBOX_XYWH = 4
     KEYPOINTS = 5
     CLASS = 6
+    BBOXES = 7
 
     @classmethod
     def get(cls, value: TKEnum['DataKey']) -> 'DataKey':
