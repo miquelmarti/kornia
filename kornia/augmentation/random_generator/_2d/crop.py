@@ -226,24 +226,24 @@ class ResizedCropGenerator(CropGenerator):
         h_out = w[torch.arange(0, batch_size, device=_device, dtype=torch.long), argmax_dim1]
         w_out = h[torch.arange(0, batch_size, device=_device, dtype=torch.long), argmax_dim1]
 
-        if not cond_bool.all():
-            # Fallback to center crop
-            in_ratio = float(size[0]) / float(size[1])
-            _min = float(self.ratio.min()) if isinstance(self.ratio, Tensor) else min(self.ratio)
-            if in_ratio < _min:
-                h_ct = tensor(size[0], device=_device, dtype=_dtype)
-                w_ct = torch.round(h_ct / _min)
-            elif in_ratio > _min:
-                w_ct = tensor(size[1], device=_device, dtype=_dtype)
-                h_ct = torch.round(w_ct * _min)
-            else:  # whole image
-                h_ct = tensor(size[0], device=_device, dtype=_dtype)
-                w_ct = tensor(size[1], device=_device, dtype=_dtype)
-            h_ct = h_ct.floor()
-            w_ct = w_ct.floor()
+        # if not cond_bool.all():
+        #     # Fallback to center crop
+        #     in_ratio = float(size[0]) / float(size[1])
+        #     _min = float(self.ratio.min()) if isinstance(self.ratio, Tensor) else min(self.ratio)
+        #     if in_ratio < _min:
+        #         h_ct = tensor(size[0], device=_device, dtype=_dtype)
+        #         w_ct = torch.round(h_ct / _min)
+        #     elif in_ratio > _min:
+        #         w_ct = tensor(size[1], device=_device, dtype=_dtype)
+        #         h_ct = torch.round(w_ct * _min)
+        #     else:  # whole image
+        #         h_ct = tensor(size[0], device=_device, dtype=_dtype)
+        #         w_ct = tensor(size[1], device=_device, dtype=_dtype)
+        #     h_ct = h_ct.floor()
+        #     w_ct = w_ct.floor()
 
-            h_out = h_out.where(cond_bool, h_ct)
-            w_out = w_out.where(cond_bool, w_ct)
+        #     h_out = h_out.where(cond_bool, h_ct)
+        #     w_out = w_out.where(cond_bool, w_ct)
 
         # Update the crop size.
         self.size = torch.stack([h_out, w_out], dim=1)
